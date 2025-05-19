@@ -596,10 +596,13 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room isFormal"})
 	}
 
-	image, err := v.NewImage(req.Image)
+	oldImage := currentRoom.Image()
+
+	newImage, err := v.ChangeImage(req.Image, oldImage)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid room Image"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+
 	state, _ := v.NewState("created")
 
 	room := d.NewRoom(
@@ -609,7 +612,7 @@ func (h *RoomEchoHandler) Update(c echo.Context) error {
 		*name,
 		adminID,
 		*description,
-		image,
+		newImage,
 		state,
 	)
 
@@ -686,8 +689,6 @@ func (r *RoomEchoHandler) RemoveFromWhitelistHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{"success": "room updated successfully"})
 }
 
-
-
 // En caso de devolver error lo hace en forma de response
 func GetUserIDFromSession(c echo.Context) (*sv.ID, error) {
 	// Obtener el user_id de la sesion
@@ -715,10 +716,10 @@ var (
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
-    		// Ajusta aquí tu dominio real
-    		if origin == "http://localhost:4321" ||origin == "https://frontend-n5g3.onrender.com" {
-      			return true
-    		}
+			// Ajusta aquí tu dominio real
+			if origin == "http://localhost:4321" || origin == "https://frontend-n5g3.onrender.com" {
+				return true
+			}
 			return false
 		},
 	}

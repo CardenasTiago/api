@@ -135,7 +135,12 @@ func ChangeImage(imageStr string, oldImage *Image) (*Image, error) {
 	case imageStr == "" || imageStr == "null":
 		return oldImage, nil
 	case !IsBase64Encoded(imageStr):
-		return &Image{Image: imageStr}, nil
+		// Validamos que sea un archivo previamente guardado, no cualquier string
+		if strings.HasSuffix(imageStr, ".png") || strings.HasSuffix(imageStr, ".jpg") ||
+			strings.HasSuffix(imageStr, ".jpeg") || strings.HasSuffix(imageStr, ".webp") {
+			return &Image{Image: imageStr}, nil
+		}
+		return nil, errors.New("formato de imagen no soportado")
 	default:
 		newImage, err := NewImage(imageStr)
 		if err != nil {
