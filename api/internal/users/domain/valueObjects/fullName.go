@@ -1,6 +1,9 @@
 package valueobjects
 
-import "errors"
+import (
+	"errors"
+	"unicode"
+)
 
 type (
 	FullName struct {
@@ -10,16 +13,25 @@ type (
 )
 
 func NewFullName(name, lastname string) (*FullName, error) {
-	if name == "" {
-		return nil, errors.New("invalid name")
+	if name == "" || !isOnlyLetters(name) {
+		return nil, errors.New("Nombre invalido")
 	}
 
-	if lastname == "" {
-		return nil, errors.New("invalid lastname")
+	if lastname == "" || !isOnlyLetters(lastname) {
+		return nil, errors.New("Apellido invalido")
 	}
 
 	return &FullName{
 		Name:     name,
 		Lastname: lastname,
 	}, nil
+}
+
+func isOnlyLetters(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
 }

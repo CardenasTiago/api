@@ -458,11 +458,12 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	image, err := v.NewImage(req.Image)
+	oldImage := currentUser.Image()
+
+	newImage, err := v.ChangeImage(req.Image, oldImage)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-
 	currentPassword := currentUser.Password()
 
 	// Crear el objeto User con los datos actualizados
@@ -473,7 +474,7 @@ func (h *UserEchoHandler) Update(c echo.Context) error {
 		*dni,
 		*email,
 		currentPassword, // No actualizamos la contraseña
-		image,
+		newImage,
 	)
 
 	// Llamar al caso de uso para actualizar el usuario

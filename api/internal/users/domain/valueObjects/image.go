@@ -46,7 +46,8 @@ type Image struct {
 }
 
 // NewImage procesa el Base64, genera un UUID y guarda el archivo bajo:
-//   <baseUploadPath>/<subfolderUploads>/<uuid>.<ext>
+//
+//	<baseUploadPath>/<subfolderUploads>/<uuid>.<ext>
 func NewImage(image string) (*Image, error) {
 	if image == "" || !strings.Contains(image, ",") {
 		return &Image{Image: image}, nil
@@ -113,4 +114,39 @@ func decodeBase64Image(base64Image string) (string, []byte, error) {
 	}
 
 	return mimeType, data, nil
+}
+
+func (i *Image) Delete() error {
+	if i == nil || i.Image == "" {
+		return nil
+	}
+	path := filepath.Join(baseUploadPath, subfolderUploads, filepath.Base(i.Image))
+	return os.Remove(path)
+}
+
+func IsBase64Encoded(image string) bool {
+	return strings.Contains(image, "data:image/")
+}
+
+func ChangeImage(imageStr string, oldImage *Image) (*Image, error) {
+	imageStr = strings.TrimSpace(imageStr)
+
+	switch {
+	case imageStr == "" || imageStr == "null":
+		return oldImage, nil
+	case !IsBase64Encoded(imageStr):
+		return &Image{Image: imageStr}, nil
+	default:
+		newImage, err := NewImage(imageStr)
+		if err != nil {
+			return nil, err
+		}
+
+		if oldImage != nil && newImage.Image != oldImage.Image {
+			if err := oldImage.Delete(); err != nil && !os.IsNotExist(err) {
+				fmt.Printf("error al eliminar imagen anterior: %v", err)
+			}
+		}
+		return newImage, nil
+	}
 }
